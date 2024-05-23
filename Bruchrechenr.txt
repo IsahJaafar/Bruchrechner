@@ -1,0 +1,178 @@
+using System;
+
+namespace Bruchrechner
+{
+    // Klasse, um Brüche zu repräsentieren
+    class Bruch
+    {
+        // Eigenschaften für Zähler und Nenner des Bruchs
+        private int zaehler;
+        private int nenner;
+
+        // Konstruktor, um einen Bruch mit Zähler und Nenner zu erstellen
+        public Bruch(int zaehler, int nenner)
+        {
+            this.zaehler = zaehler;
+            this.nenner = nenner;
+            Kuerzen(); // Kürze den Bruch beim Erstellen
+        }
+
+        // Methode, um den Bruch auf den kleinstmöglichen gemeinsamen Nenner zu kürzen
+        public void Kuerzen()
+        {
+            int gcd = GCD(Math.Abs(zaehler), Math.Abs(nenner)); // Größter gemeinsamer Teiler berechnen
+            zaehler /= gcd;
+            nenner /= gcd;
+        }
+
+        // Hilfsmethode, um den größten gemeinsamen Teiler zu berechnen
+        private int GCD(int a, int b)
+        {
+            while (b != 0)
+            {
+                int temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+
+        // Überladung des Additionoperators für Brüche
+        public static Bruch operator +(Bruch bruch1, Bruch bruch2)
+        {
+            int neuerNenner = bruch1.nenner * bruch2.nenner;
+            int neuerZaehler = bruch1.zaehler * bruch2.nenner + bruch2.zaehler * bruch1.nenner;
+            return new Bruch(neuerZaehler, neuerNenner);
+        }
+
+        // Überladung des Subtraktionsoperators für Brüche
+        public static Bruch operator -(Bruch bruch1, Bruch bruch2)
+        {
+            int neuerNenner = bruch1.nenner * bruch2.nenner;
+            int neuerZaehler = bruch1.zaehler * bruch2.nenner - bruch2.zaehler * bruch1.nenner;
+            return new Bruch(neuerZaehler, neuerNenner);
+        }
+
+        // Überladung des Multiplikationsoperators für Brüche
+        public static Bruch operator *(Bruch bruch1, Bruch bruch2)
+        {
+            int neuerNenner = bruch1.nenner * bruch2.nenner;
+            int neuerZaehler = bruch1.zaehler * bruch2.zaehler;
+            return new Bruch(neuerZaehler, neuerNenner);
+        }
+
+        // Überladung des Divisionsoperators für Brüche
+        public static Bruch operator /(Bruch bruch1, Bruch bruch2)
+        {
+            int neuerNenner = bruch1.nenner * bruch2.zaehler;
+            int neuerZaehler = bruch1.zaehler * bruch2.nenner;
+            return new Bruch(neuerZaehler, neuerNenner);
+        }
+
+        // Methode zur Berechnung der Wurzel eines Bruchs
+        public double WurzelZiehen()
+        {
+            return Math.Sqrt((double)zaehler / nenner);
+        }
+
+        // Überschreiben der ToString Methode für die Darstellung des Bruchs
+        public override string ToString()
+        {
+            return $"{zaehler}/{nenner}";
+        }
+
+        // Getter und Setter für den Zähler und Nenner des Bruchs
+        public int Zaehler
+        {
+            get { return zaehler; }
+            set
+            {
+                zaehler = value;
+                Kuerzen();
+            }
+        }
+
+        public int Nenner
+        {
+            get { return nenner; }
+            set
+            {
+                if (value == 0)
+                    throw new ArgumentException("Nenner darf nicht 0 sein.");
+                nenner = value;
+                Kuerzen();
+            }
+        }
+    }
+
+    // Hauptklasse des Programms
+    class Program
+    {
+        // Variable zum Speichern des letzten Ergebnisses
+        static Bruch LetztesErgebnis = null;
+
+        // Hauptmethode des Programms
+        static void Main(string[] args)
+        {
+            // Endlosschleife für die Benutzereingaben
+            while (true)
+            {
+                // Benutzer zur Eingabe einer Rechenoperation oder zum Beenden des Programms auffordern
+                Console.WriteLine("Geben Sie eine Rechenoperation ein (z.B. .../... + .../...) oder 'exit' zum Beenden:");
+                string input = Console.ReadLine();
+
+                // Programm beenden, wenn Benutzer 'exit' eingibt
+                if (input.ToLower() == "exit")
+                    break;
+
+                try
+                {
+                    // Eingabe in Teile zerlegen und Bruchobjekte erstellen
+                    string[] parts = input.Split(' ');
+                    Bruch operand1 = ParseBruch(parts[0]);
+                    string operation = parts[1];
+                    Bruch operand2 = ParseBruch(parts[2]);
+
+                    // Berechnung des Ergebnisses basierend auf der Operation
+                    Bruch result = Berechne(operand1, operation, operand2);
+                    Console.WriteLine($"Ergebnis: {result}");
+
+                    // Letztes Ergebnis speichern
+                    LetztesErgebnis = result;
+                }
+                catch (Exception ex)
+                {
+                    // Fehlermeldung anzeigen, wenn eine Ausnahme auftritt
+                    Console.WriteLine($"Fehler: {ex.Message}");
+                }
+            }
+        }
+
+        // Methode zum Parsen von Benutzereingaben in Bruchobjekte
+        static Bruch ParseBruch(string input)
+        {
+            string[] parts = input.Split('/');
+            int zaehler = int.Parse(parts[0]);
+            int nenner = int.Parse(parts[1]);
+            return new Bruch(zaehler, nenner);
+        }
+
+        // Methode zur Durchführung der Rechenoperation basierend auf dem Operator
+        static Bruch Berechne(Bruch operand1, string operation, Bruch operand2)
+        {
+            switch (operation)
+            {
+                case "+":
+                    return operand1 + operand2;
+                case "-":
+                    return operand1 - operand2;
+                case "*":
+                    return operand1 * operand2;
+                case "/":
+                    return operand1 / operand2;
+                default:
+                    throw new ArgumentException("Ungültige Operation.");
+            }
+        }
+    }
+}
